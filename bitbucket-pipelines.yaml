@@ -1,0 +1,39 @@
+
+image: hashicorp/terraform:full
+pipelines:
+    custom:
+      custom-testing:
+            - variables:
+                - name: action
+                  default: plan
+                  allowed-values:
+                    - plan
+                    - apply
+                    - destroy
+            - step:
+                name: Terraform-plan
+                script:
+                    - terraform init
+                    - terraform plan
+                artifacts:
+                    - .terraform/**
+            - step:
+                name: Terraform-apply
+                trigger: manual
+                script:
+                    - if [ "${action}" == plan ]; then
+                      echo "Skipping as Plan only was chosen"
+                    - elif [ "${action}" == apply ]; then
+                    - terraform apply -auto-approve
+                    - fi
+            - step:
+                name: Terraform-destroy
+                trigger: manual
+                script:
+                    - if [ "${action}" == plan ]; then
+                      echo "Skipping as Plan only was chosen"
+                    - elif [ "${action}" == apply ]; then
+                      echo "Skipping as Apply was chosen"
+                    - elif [ "${action}" == destroy ]; then
+                    - terraform destroy -auto-approve
+                    - fi
